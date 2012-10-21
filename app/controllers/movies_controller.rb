@@ -7,11 +7,16 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    @all_ratings = Movie.get_rating
     if params[:sort] == 'title' || params[:sort] == 'release_date'
        @sort = params[:sort]
-       @movies = Movie.find(:all, :order => params[:sort])
+    elsif
+       @movies = Movie.scoped()
     end
+    @movies = Movie.order(@sort)
+    @cur_ratings = params[:ratings].present? ? params[:ratings] : @all_ratings 
+#    @movies = @movies.find(:all, :conditions => ["movies.rating in (?)", @cur_ratings]) 	
+    @movies = @movies.where(:rating => @cur_ratings).all
   end
 
   def new
