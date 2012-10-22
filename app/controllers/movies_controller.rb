@@ -1,5 +1,5 @@
 class MoviesController < ApplicationController
-
+ 
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
@@ -7,16 +7,29 @@ class MoviesController < ApplicationController
   end
 
   def index
+    must_redirect = true
+
     @all_ratings = Movie.get_rating
     if params[:sort] == 'title' || params[:sort] == 'release_date'
        @sort = params[:sort]
-    elsif
+       must_redirect = false
+    elsif session[:sessort].present?
+       @sort = session[:sessort]
+    else
        @movies = Movie.scoped()
     end
+
     @movies = Movie.order(@sort)
-    @cur_ratings = params[:ratings].present? ? params[:ratings] : @all_ratings 
-#    @movies = @movies.find(:all, :conditions => ["movies.rating in (?)", @cur_ratings]) 	
+    @cur_ratings = params[:ratings].present? ? params[:ratings] : session[:sesrating].present? ? session[:sesrating] : @all_ratings 
+    if must_redirect && session[:sessort]
+       flash.keep
+       redirect_to movies_path(:sort => session[:sessort], :ratings => @cur_ratings) 
+    end
+
+    session[:sesrating] = @cur_ratings
+    session[:sessort] = @sort
     @movies = @movies.where(:rating => @cur_ratings).all
+
   end
 
   def new
